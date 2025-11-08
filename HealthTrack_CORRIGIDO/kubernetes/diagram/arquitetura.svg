@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="1200" height="700" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .box { fill:#f9fafb; stroke:#1f2937; stroke-width:1.5; rx:12; }
+    .ns { fill:#eef2ff; stroke:#3730a3; }
+    .title { font-family: Arial, sans-serif; font-size:18px; font-weight:bold; fill:#111827; }
+    .label { font-family: Arial, sans-serif; font-size:14px; fill:#111827; }
+    .note { font-family: Arial, sans-serif; font-size:12px; fill:#4b5563; }
+    .svc { fill:#dcfce7; stroke:#166534; }
+    .dep { fill:#e0f2fe; stroke:#075985; }
+  </style>
+
+  <text x="20" y="30" class="title">Arquitetura — HealthTrack em Kubernetes (Kind 1 nó)</text>
+  <text x="20" y="50" class="note">NodePort: frontend-svc:80 → 30080 • backend exposto via hostPort:3000 • DB persistido com PV/PVC</text>
+
+  <rect x="950" y="80" width="220" height="80" class="box"/>
+  <text x="960" y="105" class="label">Usuário (Navegador)</text>
+  <text x="960" y="130" class="note">http://localhost:30080 (frontend)</text>
+  <text x="960" y="150" class="note">Chama backend em http://localhost:3000</text>
+
+  <rect x="40" y="90" width="320" height="240" class="box ns"/>
+  <text x="60" y="115" class="title">Namespace: frontend</text>
+  <rect x="60" y="140" width="280" height="70" class="box dep"/>
+  <text x="70" y="165" class="label">Deployment: frontend-deploy (3 réplicas)</text>
+  <text x="70" y="185" class="note">image: healthtrack-frontend:latest</text>
+
+  <rect x="60" y="220" width="280" height="80" class="box svc"/>
+  <text x="70" y="245" class="label">Service: frontend-svc (NodePort:30080 → 80)</text>
+  <text x="70" y="265" class="note">type: NodePort</text>
+
+  <rect x="40" y="360" width="500" height="260" class="box ns"/>
+  <text x="60" y="385" class="title">Namespace: backend</text>
+  <rect x="60" y="410" width="300" height="80" class="box dep"/>
+  <text x="70" y="435" class="label">Deployment: backend-deploy (2 réplicas)</text>
+  <text x="70" y="455" class="note">image: healthtrack-backend:latest</text>
+  <text x="70" y="475" class="note">envFrom: ConfigMap backend-config</text>
+
+  <rect x="370" y="410" width="150" height="80" class="box"/>
+  <text x="380" y="435" class="label">ConfigMap</text>
+  <text x="380" y="455" class="note">DB_HOST, DB_PORT...</text>
+
+  <rect x="60" y="505" width="280" height="80" class="box svc"/>
+  <text x="70" y="530" class="label">Service: backend-svc (ClusterIP:3000)</text>
+  <text x="70" y="550" class="note">Apenas interno</text>
+
+  <rect x="580" y="360" width="560" height="260" class="box ns"/>
+  <text x="600" y="385" class="title">Namespace: database</text>
+  <rect x="600" y="410" width="280" height="80" class="box dep"/>
+  <text x="610" y="435" class="label">Deployment: db-deploy (1 réplica)</text>
+  <text x="610" y="455" class="note">image: postgres:16-alpine</text>
+
+  <rect x="890" y="410" width="230" height="80" class="box"/>
+  <text x="900" y="435" class="label">ConfigMap: db-config</text>
+  <text x="900" y="455" class="note">POSTGRES_* variáveis</text>
+
+  <rect x="600" y="505" width="280" height="80" class="box svc"/>
+  <text x="610" y="530" class="label">Service: db-svc (ClusterIP:5432)</text>
+
+  <rect x="890" y="505" width="230" height="80" class="box"/>
+  <text x="900" y="530" class="label">PV hostPath + PVC</text>
+  <text x="900" y="550" class="note">/data/healthtrack (Retain)</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#111827" />
+    </marker>
+  </defs>
+
+  <line x1="950" y1="120" x2="340" y2="260" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="180" y1="300" x2="180" y2="410" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="340" y1="545" x2="600" y2="545" stroke="#111827" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>
