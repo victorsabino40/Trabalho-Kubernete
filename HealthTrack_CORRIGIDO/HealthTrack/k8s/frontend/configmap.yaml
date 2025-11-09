@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: frontend
+data:
+  REACT_APP_BACKEND_URL: "http://backend.backend.svc.cluster.local:3000"
