@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: database
+data:
+  POSTGRES_DB: healthtrack
+  POSTGRES_USER: healthuser
+  POSTGRES_PASSWORD: healthpass

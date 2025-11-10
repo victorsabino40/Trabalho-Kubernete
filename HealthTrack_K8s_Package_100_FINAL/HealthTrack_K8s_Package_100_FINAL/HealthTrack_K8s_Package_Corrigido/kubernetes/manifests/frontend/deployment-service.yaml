@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deploy
+  namespace: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      volumes:
+        - name: nginx-template
+          configMap:
+            name: frontend-config
+            items:
+              - key: NGINX_CONF_TEMPLATE
+                path: nginx.conf.template
+      containers:
+        - name: frontend
+          image: healthtrack-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: BACKEND_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: frontend-config
+                  key: BACKEND_BASE_URL
+          volumeMounts:
+            - name: nginx-template
+              mountPath: /etc/nginx/templates
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              if [ -f /etc/nginx/templates/nginx.conf.template ]; then
+                envsubst < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf;
+              fi;
+              nginx -g "daemon off;"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+  type: NodePort
