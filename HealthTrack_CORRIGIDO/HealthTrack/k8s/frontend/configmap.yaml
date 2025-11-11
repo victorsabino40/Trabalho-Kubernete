@@ -4,4 +4,4 @@ metadata:
   name: frontend-config
   namespace: frontend
 data:
-  REACT_APP_BACKEND_URL: "http://backend.backend.svc.cluster.local:3000"
+  REACT_APP_BACKEND_URL: "http://backend-svc.backend.svc.cluster.local:3000"

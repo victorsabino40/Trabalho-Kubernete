@@ -17,12 +17,11 @@ spec:
     spec:
       containers:
         - name: backend
-          image: gestaobackend:v1
+          image: victorsabino40/gestaobackend:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
               name: http
-              hostPort: 3000
           envFrom:
             - configMapRef:
                 name: backend-config

@@ -17,8 +17,30 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: victorsabino40/gestaofrontend:v1
-          imagePullPolicy: IfNotPresent
+          image: victorsabino40/gestaofrontend:v2
           ports:
             - containerPort: 80
-              name: http
+          env:
+            - name: REACT_APP_BACKEND_URL
+              value: "http://backend-svc.backend.svc.cluster.local:3000"
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: frontend
+spec:
+  selector:
+    app: frontend
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080

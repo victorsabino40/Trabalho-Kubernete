@@ -6,7 +6,8 @@ metadata:
 data:
   DB_HOST: "postgres-svc.database.svc.cluster.local"
   DB_PORT: "5432"
-  DB_NAME: "healthtrack"
-  DB_USER: "healthtrack"
-  DB_PASSWORD: "secret"
+  DB_NAME: "postgres"
+  DB_USER: "postgres"
+  DB_PASSWORD: "postgres"
+
 
