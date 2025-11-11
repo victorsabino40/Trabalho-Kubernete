@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
-const API = (location.origin.replace(/:80$/, '') || 'http://localhost').replace(/\/$/, '')
-const BACKEND = API.replace(/:\d+$/, '') + ':3000'
+// ✅ Usa a variável de ambiente definida no build do Docker
+const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
 
 const ESPECIALIDADES = [
   "Clínico Geral",
@@ -16,8 +16,7 @@ const ESPECIALIDADES = [
   "Urologia"
 ]
 
-// Gera horários FUTUROS: hoje até +30 dias, 08:00 → 18:00 (1h). 
-// Se for hoje, horários passados ficam indisponíveis (disabled no <option>).
+// Gera horários FUTUROS: hoje até +30 dias, 08:00 → 18:00 (1h)
 const gerarHorariosFuturos = () => {
   const slots = []
   const agora = new Date()
@@ -31,6 +30,7 @@ const gerarHorariosFuturos = () => {
   }
   return slots
 }
+
 export default function App() {
   const [pacientes, setPacientes] = useState([])
   const [consultas, setConsultas] = useState([])
@@ -41,50 +41,62 @@ export default function App() {
   const horarios = gerarHorariosFuturos()
 
   const carregar = async () => {
-    const ps = await fetch(`${BACKEND}/pacientes`).then(r => r.json())
-    const cs = await fetch(`${BACKEND}/consultas`).then(r => r.json())
-    setPacientes(ps); setConsultas(cs)
+    try {
+      const ps = await fetch(`${BACKEND}/pacientes`).then(r => r.json())
+      const cs = await fetch(`${BACKEND}/consultas`).then(r => r.json())
+      setPacientes(ps)
+      setConsultas(cs)
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err)
+    }
   }
 
   useEffect(() => { carregar() }, [])
 
   const addPaciente = async (e) => {
     e.preventDefault()
-    const resp = await fetch(`${BACKEND}/pacientes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...p, idade: p.idade ? Number(p.idade) : null })
-    })
-    if (!resp.ok) return alert('Erro ao salvar paciente')
-    setP({ nome: '', idade: '', email: '', telefone: '' })
-    await carregar()
+    try {
+      const resp = await fetch(`${BACKEND}/pacientes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...p, idade: p.idade ? Number(p.idade) : null })
+      })
+      if (!resp.ok) throw new Error('Erro ao salvar paciente')
+      setP({ nome: '', idade: '', email: '', telefone: '' })
+      await carregar()
+    } catch (err) {
+      alert('Erro ao salvar paciente. Verifique a conexão com o backend.')
+      console.error(err)
+    }
   }
 
   const addConsulta = async (e) => {
     e.preventDefault()
-    const payload = { ...c }
-    const resp = await fetch(`${BACKEND}/consultas`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    if (!resp.ok) return alert('Erro ao salvar consulta')
-    const created = await resp.json()
-
-    // Enriquecer para exibir imediatamente com nome do paciente
-    const paciente = pacientes.find(px => String(px.id) === String(created.paciente_id))
-    const display = {
-      id: created.id,
-      paciente_id: created.paciente_id,
-      paciente_nome: paciente ? paciente.nome : `Paciente #${created.paciente_id}`,
-      data_consulta: created.data_consulta,
-      medico: created.medico,
-      observacao: created.observacao,
-      criado_em: created.criado_em
+    try {
+      const payload = { ...c }
+      const resp = await fetch(`${BACKEND}/consultas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!resp.ok) throw new Error('Erro ao salvar consulta')
+      const created = await resp.json()
+      const paciente = pacientes.find(px => String(px.id) === String(created.paciente_id))
+      const display = {
+        id: created.id,
+        paciente_id: created.paciente_id,
+        paciente_nome: paciente ? paciente.nome : `Paciente #${created.paciente_id}`,
+        data_consulta: created.data_consulta,
+        medico: created.medico,
+        observacao: created.observacao,
+        criado_em: created.criado_em
+      }
+      setConsultas(prev => [display, ...prev])
+      setC({ paciente_id: '', data_consulta: '', medico: '', observacao: '' })
+    } catch (err) {
+      alert('Erro ao salvar consulta. Verifique a conexão com o backend.')
+      console.error(err)
     }
-    setConsultas(prev => [display, ...prev])
-
-    setC({ paciente_id: '', data_consulta: '', medico: '', observacao: '' })
   }
 
   return (
@@ -122,19 +134,18 @@ export default function App() {
               {pacientes.map(px => <option key={px.id} value={px.id}>{px.nome}</option>)}
             </select>
 
-            {/* Campo Data/Hora: opções 08:00 → 18:00 */}
             <select value={c.data_consulta} onChange={e => setC({ ...c, data_consulta: e.target.value })} required>
               <option value="">Selecione Data/Hora *</option>
               {horarios.map(h => {
                 const isPast = new Date(h) < new Date();
                 return (
-                <option key={h} value={h} disabled={isPast}>
-                  {new Date(h).toLocaleString()}{isPast ? " (indisponível)" : ""}
-                </option>
-              )})}
+                  <option key={h} value={h} disabled={isPast}>
+                    {new Date(h).toLocaleString()}{isPast ? " (indisponível)" : ""}
+                  </option>
+                )
+              })}
             </select>
 
-            {/* Campo Médico: lista de especialidades */}
             <select value={c.medico} onChange={e => setC({ ...c, medico: e.target.value })}>
               <option value="">Especialidade</option>
               {ESPECIALIDADES.map(sp => <option key={sp} value={sp}>{sp}</option>)}
