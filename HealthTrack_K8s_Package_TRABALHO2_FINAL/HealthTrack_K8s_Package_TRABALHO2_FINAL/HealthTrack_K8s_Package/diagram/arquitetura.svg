@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540">
+  <rect x="10" y="10" width="940" height="520" fill="#0b1220" stroke="#3aa2ff" stroke-width="2" rx="12"/>
+  <text x="30" y="40" fill="#ffffff" font-size="20" font-family="Arial">HealthTrack - Arquitetura (Kubernetes)</text>
+
+  <!-- Namespaces -->
+  <rect x="40" y="70" width="260" height="420" fill="#14213d" stroke="#4cc9f0" rx="8"/>
+  <text x="50" y="95" fill="#cdeafe" font-size="16" font-family="Arial">namespace: frontend</text>
+
+  <rect x="350" y="70" width="260" height="420" fill="#14213d" stroke="#4cc9f0" rx="8"/>
+  <text x="360" y="95" fill="#cdeafe" font-size="16" font-family="Arial">namespace: backend</text>
+
+  <rect x="660" y="70" width="260" height="420" fill="#14213d" stroke="#4cc9f0" rx="8"/>
+  <text x="670" y="95" fill="#cdeafe" font-size="16" font-family="Arial">namespace: database</text>
+
+  <!-- Frontend -->
+  <rect x="60" y="120" width="220" height="120" fill="#1f2d5a" stroke="#94d2ff" rx="8"/>
+  <text x="70" y="145" fill="#d9f1ff" font-size="14" font-family="Arial">Deployment: frontend-deploy (3)</text>
+  <text x="70" y="165" fill="#d9f1ff" font-size="13" font-family="Arial">Service: frontend-svc (NodePort:30080)</text>
+  <text x="70" y="185" fill="#d9f1ff" font-size="13" font-family="Arial">ConfigMap: frontend-config</text>
+
+  <!-- Backend -->
+  <rect x="370" y="120" width="220" height="120" fill="#1f2d5a" stroke="#94d2ff" rx="8"/>
+  <text x="380" y="145" fill="#d9f1ff" font-size="14" font-family="Arial">Deployment: backend-deploy (2)</text>
+  <text x="380" y="165" fill="#d9f1ff" font-size="13" font-family="Arial">Service: backend-svc (ClusterIP)</text>
+  <text x="380" y="185" fill="#d9f1ff" font-size="13" font-family="Arial">ConfigMap: backend-config</text>
+
+  <!-- Database -->
+  <rect x="680" y="120" width="220" height="160" fill="#1f2d5a" stroke="#94d2ff" rx="8"/>
+  <text x="690" y="145" fill="#d9f1ff" font-size="14" font-family="Arial">Deployment: db-deploy (1)</text>
+  <text x="690" y="165" fill="#d9f1ff" font-size="13" font-family="Arial">Service: db-svc (ClusterIP)</text>
+  <text x="690" y="185" fill="#d9f1ff" font-size="13" font-family="Arial">PV/PVC: db-pv / db-pvc</text>
+  <text x="690" y="205" fill="#d9f1ff" font-size="13" font-family="Arial">ConfigMaps: database-config, db-init-sql</text>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#8bd3ff" />
+    </marker>
+  </defs>
+
+  <!-- User -> Frontend -->
+  <line x1="150" y1="100" x2="150" y2="70" stroke="#8bd3ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="70" y="65" fill="#8bd3ff" font-size="12" font-family="Arial">User (HTTP :30080)</text>
+
+  <!-- Frontend -> Backend -->
+  <line x1="280" y1="180" x2="370" y2="180" stroke="#8bd3ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="285" y="170" fill="#8bd3ff" font-size="12" font-family="Arial">/api -> backend-svc</text>
+
+  <!-- Backend -> Database -->
+  <line x1="590" y1="180" x2="680" y2="180" stroke="#8bd3ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="595" y="170" fill="#8bd3ff" font-size="12" font-family="Arial">5432 -> db-svc</text>
+</svg>

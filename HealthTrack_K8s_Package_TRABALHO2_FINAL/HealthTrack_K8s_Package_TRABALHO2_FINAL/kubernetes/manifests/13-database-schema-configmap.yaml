@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-schema
+  namespace: database
+  labels:
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: healthtrack
+data:
+  schema.sql: |
+    -- Esquema HealthTrack (idempotente)
+    CREATE TABLE IF NOT EXISTS pacientes (
+      id SERIAL PRIMARY KEY,
+      nome TEXT NOT NULL,
+      idade INT,
+      email TEXT,
+      telefone TEXT,
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS consultas (
+      id SERIAL PRIMARY KEY,
+      paciente_id INT NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+      data_consulta TIMESTAMP NOT NULL,
+      medico TEXT,
+      observacao TEXT,
+      criado_em TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_consultas_paciente ON consultas(paciente_id);
+    CREATE INDEX IF NOT EXISTS idx_consultas_data ON consultas(data_consulta);

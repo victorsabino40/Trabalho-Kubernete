@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-path-provisioner-service-account
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-path-provisioner-role
+rules:
+- apiGroups: [""]
+  resources: ["nodes","persistentvolumeclaims","persistentvolumes","pods","secrets"]
+  verbs: ["get","list","watch","create","delete","update","patch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create","update","patch"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["create","get","list","watch","update"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get","list","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: local-path-provisioner-bind
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: local-path-provisioner-role
+subjects:
+- kind: ServiceAccount
+  name: local-path-provisioner-service-account
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-path-config
+  namespace: kube-system
+data:
+  config.json: |
+    {
+      "nodePathMap":[
+        {
+          "node":"DEFAULT_PATH_FOR_NON_LISTED_NODES",
+          "paths":["/opt/local-path-provisioner"]
+        }
+      ]
+    }
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: local-path-provisioner
+  namespace: kube-system
+  labels:
+    app: local-path-provisioner
+spec:
+  selector:
+    matchLabels:
+      app: local-path-provisioner
+  template:
+    metadata:
+      labels:
+        app: local-path-provisioner
+    spec:
+      serviceAccountName: local-path-provisioner-service-account
+      tolerations:
+      - operator: "Exists"
+      initContainers:
+      - name: ensure-hostpath
+        image: busybox:1.35.0
+        securityContext:
+          privileged: true
+        command:
+        - sh
+        - -c
+        - mkdir -p /host/opt/local-path-provisioner && chmod -R 0777 /host/opt/local-path-provisioner
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+      containers:
+      - name: local-path-provisioner
+        image: rancher/local-path-provisioner:v0.0.24
+        imagePullPolicy: IfNotPresent
+        command:
+        - local-path-provisioner
+        - --debug
+        - --config
+        - /etc/config/config.json
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: HELPER_IMAGE
+          value: busybox:1.35.0
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+        - name: host-root
+          mountPath: /host
+      volumes:
+      - name: config-volume
+        configMap:
+          name: local-path-config
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory

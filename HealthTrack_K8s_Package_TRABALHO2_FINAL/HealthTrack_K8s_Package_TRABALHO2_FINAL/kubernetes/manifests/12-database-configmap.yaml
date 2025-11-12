@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: database
+  labels:
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: healthtrack
+data:
+  POSTGRES_DB: "healthtrack"
+  POSTGRES_USER: "healthtrack"
+  POSTGRES_PASSWORD: "secret"

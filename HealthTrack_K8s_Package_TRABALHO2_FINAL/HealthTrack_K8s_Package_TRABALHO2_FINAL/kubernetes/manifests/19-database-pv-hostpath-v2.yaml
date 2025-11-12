@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-pv-v2
+  labels:
+    app.kubernetes.io/part-of: healthtrack
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /opt/local-path-provisioner/healthtrack-db
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: database

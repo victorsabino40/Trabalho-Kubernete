@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deploy
+  namespace: database
+  labels:
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: healthtrack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: database
+        app.kubernetes.io/part-of: healthtrack
+    spec:
+      securityContext:
+        fsGroup: 70
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: POSTGRES_PASSWORD
+        startupProbe:
+          exec:
+            # [CORREÇÃO 1: Removidas as aspas extras. O comando é uma única string.]
+            command: ["sh", "-lc", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 -p 5432"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
+        readinessProbe:
+          exec:
+            # [CORREÇÃO 1: Removidas as aspas extras. O comando é uma única string.]
+            command: ["sh", "-lc", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 -p 5432"]
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            # [CORREÇÃO 1: Removidas as aspas extras. O comando é uma única string.]
+            command: ["sh", "-lc", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 -p 5432"]
+          periodSeconds: 10
+          failureThreshold: 6
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data
+        - name: db-init
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+      # [CORREÇÃO 2: A seção 'volumes:' foi movida para fora do bloco 'containers:'.]
+      # A indentação dela agora está no mesmo nível de 'containers:' e 'securityContext:'.
+      volumes:
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: db-pvc
+      - name: db-init
+        configMap:
+          name: db-init-sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+  namespace: database
+  labels:
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: healthtrack
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: database
+  ports:
+  - name: pgsql
+    port: 5432
+    targetPort: 5432

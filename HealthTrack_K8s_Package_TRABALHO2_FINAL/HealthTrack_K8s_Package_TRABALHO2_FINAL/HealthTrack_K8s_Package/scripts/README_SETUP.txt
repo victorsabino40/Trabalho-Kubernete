@@ -1,0 +1,1 @@
+Use .\setup.ps1 -Recreate -LoadLocalImages -ManifestsRoot "..\manifests" -ClusterName healthtrack

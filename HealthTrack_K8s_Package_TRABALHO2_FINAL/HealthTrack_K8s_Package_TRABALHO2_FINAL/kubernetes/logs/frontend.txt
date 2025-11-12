@@ -1,0 +1,1 @@
+PLACEHOLDER: após executar os testes E2E, rode scripts/logs.* para sobrescrever este arquivo com os logs reais do Deployment.

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: healthtrack
+data:
+  # Mantido para compatibilidade, mas o frontend (SPA) resolve a URL pelo host (:3000).
+  VITE_BACKEND_URL: "http://backend-svc.backend.svc.cluster.local:3000"
